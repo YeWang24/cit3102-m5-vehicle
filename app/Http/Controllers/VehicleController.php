@@ -2,47 +2,60 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Vehicle;
 use Illuminate\Http\Request;
 
 class VehicleController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
+    public function index(Request $request)
     {
-        //
+        $allowed = ['make', 'model', 'color'];   // whitelist
+        $query = Vehicle::query();
+
+        foreach ($allowed as $field) {
+            if ($request->filled($field)) {
+                $query->where($field, $request->query($field));
+            }
+        }
+
+        return response()->json($query->get());
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
     {
-        //
+        $data = $request->validate([
+            'make'  => 'required|string',
+            'model' => 'required|string',
+            'color' => 'required|string',
+            'year'  => 'required|integer',
+            'price' => 'required|integer',
+        ]);
+
+        return response()->json(Vehicle::create($data), 201);
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
+    public function show(Vehicle $vehicle)
     {
-        //
+        return response()->json($vehicle);
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
+    public function update(Request $request, Vehicle $vehicle)
     {
-        //
+        $data = $request->validate([
+            'make'  => 'sometimes|required|string',
+            'model' => 'sometimes|required|string',
+            'color' => 'sometimes|required|string',
+            'year'  => 'sometimes|required|integer',
+            'price' => 'sometimes|required|integer',
+        ]);
+
+        $vehicle->update($data);
+        return response()->json($vehicle);
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
+    public function destroy(Vehicle $vehicle)
     {
-        //
+        $vehicle->delete();
+        return response()->noContent();
     }
 }
